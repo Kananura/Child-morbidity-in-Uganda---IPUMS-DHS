@@ -1,0 +1,476 @@
+---
+title: "What are the main predictors of Pneumonia and Diarrhoea in rural and urban setting?: a machine learning predictive modelling approach "
+author: "Kananura Rornald Muhumuza"
+
+date: "5/28/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(caret)
+library(ggplot2)
+library(ggpubr)
+library(randomForest)
+library(gbm)
+library(glmnet)
+```
+
+
+
+```{r}
+setwd("C:/Users/Kananura Rornald/Dropbox/PhD Paper 3/IPUM DHS data/Pnuemonia/Revised_May")
+
+```
+
+
+```{r}
+Rural <- read.csv("Pneum_Rural.csv")
+```
+
+
+```{r}
+df_models<-Rural
+
+df_models$ARI<-ifelse(df_models$ARI==1, "Yes",  "No")
+
+df_models$Partner<-ifelse(df_models$Partner==1, "Yes",  "No")
+df_models$Wall_structures<-ifelse(df_models$Wall_structures==1, "Yes",  "No")
+df_models$Floor_struc<-ifelse(df_models$Floor_struc==1, "Yes",  "No") 
+df_models$Roof_struc<-ifelse(df_models$Roof_struc==1, "Yes",  "No")
+df_models$Singletone<-ifelse(df_models$Singletone==1, "Yes",  "No")
+df_models$motorcycl<-ifelse(df_models$motorcycl==1, "Yes",  "No")
+df_models$carhh<-ifelse(df_models$carhh==1, "Yes",  "No") 
+
+df_models$Fever<-ifelse(df_models$Fever==1, "Yes",  "No")
+
+
+df_models$Pregnant<-ifelse(df_models$Pregnant==1, "Yes",  "No")
+df_models$Cooking_Place<-ifelse(df_models$Cooking_Place==1, "Yes",  "No")
+df_models$Toilet_shared<-ifelse(df_models$Toilet_shared==1, "Yes",  "No")
+df_models$Treat_water<-ifelse(df_models $Treat_water==1, "Yes",  "No")
+df_models$Radio<-ifelse(df_models$Radio==1, "Yes",  "No") 
+
+df_models$TV<-ifelse(df_models$TV==1, "Yes",  "No")
+df_models$hheadsex<-ifelse(df_models$hheadsex==1, "Yes",  "No")
+df_models$urban<-ifelse(df_models$urban==1, "Yes",  "No")
+df_models$kidsex<-ifelse(df_models$kidsex==1, "Yes",  "No") 
+
+df_models$Occup_1<-ifelse(df_models$Occup_1==1, "Yes",  "No")
+df_models$Occup_2<-ifelse(df_models$Occup_2==1, "Yes",  "No")
+df_models$Occup_3<-ifelse(df_models$Occup_3==1, "Yes",  "No" )
+df_models$Occup_4<-ifelse(df_models$Occup_4==1, "Yes",  "No")
+df_models$Occup_5<-ifelse(df_models$Occup_5==1, "Yes",  "No")
+df_models$Cook_fuel_1<-ifelse(df_models$Cook_fuel_1==1, "Yes",  "No")
+df_models$Cook_fuel_2<-ifelse(df_models$Cook_fuel_2==1, "Yes",  "No")
+df_models$Cook_fuel_3<-ifelse(df_models$Cook_fuel_3==1, "Yes",  "No")
+df_models$educlvl_1<-ifelse(df_models$educlvl_1==1, "Yes",  "No") 
+df_models$educlvl_2<-ifelse(df_models$educlvl_2==1, "Yes",  "No")
+df_models$educlvl_3<-ifelse(df_models$educlvl_3==1, "Yes",  "No")
+df_models$educlvl_4<-ifelse(df_models$educlvl_4==1, "Yes",  "No")
+
+df_models$H4age<- ifelse(df_models$H4age==1, "Yes",  "No")
+df_models$W4height<-ifelse(df_models$W4height==1, "Yes",  "No")
+df_models$W4age<-ifelse(df_models$W4age==1, "Yes",  "No")
+
+df_models$Elect<-ifelse(df_models$Elect==1, "Yes", "No")
+
+df_models$Mobile_fone<-ifelse(df_models$Mobile_fone==1, "Yes",  "No")
+
+df_models$Overweightight<-ifelse(df_models$Overweightight==1, "Yes",  "No")
+
+df_models$overweight4age<-ifelse(df_models$overweight4age==1, "Yes",  "No")
+
+
+df_models$Partner<-as.factor(df_models$Partner)
+df_models$Wall_structures<-as.factor(df_models$Wall_structures)
+df_models$Floor_struc<-as.factor(df_models$Floor_struc) 
+df_models$Roof_struc<-as.factor(df_models$Roof_struc)
+df_models$Singletone<-as.factor(df_models$Singletone)
+df_models$motorcycl<-as.factor(df_models$motorcycl)
+
+
+df_models$carhh<-as.factor(df_models$carhh) 
+df_models$Fever<-as.factor(df_models$Fever)
+df_models$Pregnant<-as.factor(df_models$Pregnant)
+
+
+df_models$Cooking_Place<-as.factor(df_models$Cooking_Place)
+df_models$Toilet_shared<-as.factor(df_models$Toilet_shared)
+df_models$Treat_water<-as.factor(df_models$Treat_water)
+df_models$Radio<-as.factor(df_models$Radio) 
+df_models$TV<-as.factor(df_models$TV)
+
+
+df_models$hheadsex<-as.factor(df_models$hheadsex)
+df_models$urban<-as.factor(df_models$urban)
+df_models$kidsex<-as.factor(df_models$kidsex) 
+
+
+
+df_models$Occup_1<-as.factor(df_models$Occup_1)
+df_models$Occup_2<-as.factor(df_models$Occup_2)
+df_models$Occup_3<-as.factor(df_models$Occup_3) 
+df_models$Occup_4<-as.factor(df_models$Occup_4)
+df_models$Occup_5<-as.factor(df_models$Occup_5)
+
+df_models$Cook_fuel_1<-as.factor(df_models$Cook_fuel_1)
+df_models$Cook_fuel_2<-as.factor(df_models$Cook_fuel_2)
+df_models$Cook_fuel_3<-as.factor(df_models$Cook_fuel_3)
+
+df_models$educlvl_1<-as.factor(df_models$educlvl_1) 
+df_models$educlvl_2<-as.factor(df_models$educlvl_2)
+df_models$educlvl_3<-as.factor(df_models$educlvl_3)
+df_models$educlvl_4<-as.factor(df_models$educlvl_4)
+
+df_models$H4age<- as.factor(df_models$H4age)
+df_models$W4height<-as.factor(df_models$W4height)
+df_models$W4age<-as.factor(df_models$W4age)
+
+
+df_models$age<-as.numeric(df_models$age)
+df_models$hhkidlt5<-as.numeric(df_models$hhkidlt5)
+df_models$kidbord<-as.numeric(df_models$kidbord)
+df_models$sleeprooms <- as.numeric(df_models$sleeprooms)
+df_models$hhmemtotal <-as.numeric(df_models$hhmemtotal)
+df_models$hheadage<-as.numeric(df_models$hheadage)
+df_models$chicknum <-as.numeric(df_models$chicknum)
+df_models$birthwt <-as.numeric(df_models$birthwt)
+df_models$AnimHouse  <-as.numeric(df_models$AnimHouse ) 
+
+df_models$Elect<-as.factor(df_models$Elect)
+
+df_models$Mobile_fone<-as.factor(df_models$Mobile_fone)
+
+df_models$Overweightight<-as.factor(df_models$Overweightight)
+
+df_models$overweight4age<-as.factor(df_models$overweight4age)
+
+df_models$ARI<-as.factor(df_models$ARI)
+
+```
+
+
+
+##################################################################################################
+## Preparing data for machine learning ##
+##################################################################################################
+
+```{r}
+
+df_models<-na.omit(df_models)
+
+n <-  nrow(df_models)
+n_train <- round(0.7 * n) # 70% of the dataset
+
+set.seed(1)
+train_indices <- sample(1:n, n_train) # Create a vector of indices which is an 70% random sample
+df_train <- df_models[ train_indices, ]  
+df_test  <- df_models[-train_indices, ] 
+```
+
+
+
+# creating fitcontrol
+```{r}
+
+fitControl <- trainControl(
+  method = "cv",
+  number=10,
+   summaryFunction = twoClassSummary,
+  classProbs = TRUE)
+```
+
+
+
+
+#################################################################
+## Reference model -- logistic regression with triage variable ##
+#################################################################
+
+
+```{r}
+
+
+R_fit_logistic1<-caret:: train(ARI~Partner+birthwt+H4age+W4height+W4age+Wall_structures+Floor_struc+ Roof_struc+  Cooking_Place+ Toilet_shared+ Treat_water+ Radio+TV+ age+ hheadsex+ hhkidlt5+  kidsex+ child_age_Month+ kidbord+ sleeprooms+ hhmemtotal+ hheadage++Occup_2+Occup_3+Occup_4+Occup_5+ Cook_fuel_2+ Cook_fuel_3+ educlvl_2+ educlvl_3+ educlvl_4+ Singletone+motorcycl +carhh+CattleNum+smallAnimaNum+Numberold+Elect+Mobile_fone+Overweightight+ overweight4age, data=df_train,  trControl =fitControl, method = "glm",  family = "binomial") 
+```
+
+
+```{r}
+plot(varImp(R_fit_logistic1, scale =TRUE))
+
+plot(varImp(R_fit_logistic1, scale =F))
+```
+
+
+
+#Model Predictions 
+```{r}
+# predict the outcome on a test set
+R_model_glm_pred <- predict(R_fit_logistic1, newdata=df_test, type ="prob")
+
+```
+
+
+```{r}
+library(pROC)
+
+hist(R_model_glm_pred$Yes)
+
+# ROC
+(R_roc_glm <- roc(response  = df_test$ARI, 
+                  predictor = R_model_glm_pred$Yes) )
+
+plot(R_roc_glm, legacy.axes=TRUE)
+
+smooth(R_roc_glm)
+
+ci(R_roc_glm) # for confidence intervals 
+
+```
+
+
+##################################################################################################
+#Lasso model 
+##################################################################################################
+
+
+```{r}
+
+fomula1<-ARI~Partner+birthwt+H4age+H4age+W4height+W4age+Wall_structures+Floor_struc+ Roof_struc+  Cooking_Place+ Toilet_shared+ Treat_water+ Radio+ TV+ age+ hheadsex+ hhkidlt5+  kidsex+ child_age_Month+ kidbord+ sleeprooms+ hhmemtotal+ hheadage+Occup_1+Occup_2+Occup_3+Occup_4+Occup_5+ Cook_fuel_1+Cook_fuel_2+ Cook_fuel_3+ educlvl_1+educlvl_2+ educlvl_3+ educlvl_4+ Singletone+motorcycl +carhh+CattleNum+smallAnimaNum+Numberold+Elect+Mobile_fone+Overweightight+ overweight4age
+
+R_fit_lasso_cv1<- caret::train(fomula1, method = "glmnet",
+  trControl =fitControl,
+  tuneLength = 10,  family = "binomial", type.measure = 'auc', data=df_train) 
+```
+
+
+```{r}
+plot(varImp(R_fit_lasso_cv1, scale =T))
+```
+
+
+```{r}
+coef(R_fit_lasso_cv1$finalModel, R_fit_lasso_cv1$bestTune$lambda)
+```
+
+
+
+#Model Predictions 
+```{r}
+# predict the outcome on a test set
+R_model_lasso_pred <- predict(R_fit_lasso_cv1, df_test,  type ="prob") 
+
+```
+
+
+
+
+```{r}
+library(pROC)
+
+hist(R_model_lasso_pred$Yes)
+
+
+
+# ROC
+(R_roc_lasso <- roc(response=df_test$ARI, 
+                  predictor =R_model_lasso_pred$Yes))
+
+library(mlbench) # This loads a collection of artificial and real-world machine learning benchmark problems, including, e.g., several data sets from the UCI repository.
+library(caTools)
+
+Roc2_colAUC(R_model_lasso_pred, df_test$ARI, plotROC = TRUE)
+
+
+plot(roc_lasso, legacy.axes=TRUE)
+
+smooth(roc_lasso)
+
+ci(roc_lasso) # for confidence intervals 
+
+```
+
+
+#################################################################################################
+#Random forests 
+##################################################################################################
+```{r}
+
+
+fomula<-ARI~Partner+birthwt+H4age+H4age+W4height+W4age+Wall_structures+Floor_struc+ Roof_struc+  Cooking_Place+ Toilet_shared+ Treat_water+ Radio+ TV+ age+ hheadsex+ hhkidlt5+  kidsex+ child_age_Month+ kidbord+ sleeprooms+ hhmemtotal+ hheadage+Occup_1+Occup_2+Occup_3+Occup_4+Occup_5+Cook_fuel_1+ Cook_fuel_2+ Cook_fuel_3+educlvl_1+ educlvl_2+ educlvl_3+ educlvl_4+ Singletone+motorcycl +carhh+CattleNum+smallAnimaNum+Numberold+Elect+Mobile_fone+Overweightight+ overweight4age
+
+R_model.rf<-randomForest:: randomForest(fomula, important=TRUE, proximity=TRUE, norm.votes=TRUE, data=df_train, ntree=3000, mtry=7, metric = "Accuracy", trControl=fitControl, importance=TRUE) 
+
+
+
+print(R_model.rf)
+
+importance(R_model.rf)
+
+varImpPlot(R_model.rf)
+
+```
+
+
+#Model Predictions 
+```{r}
+# predict the outcome on a test set
+R_model_rf_pred <- predict(R_model.rf, df_test, type = "prob")
+R_df_test.rf<-cbind(df_test, model_rf_pred)
+R_df_test.rf$t<-df_test.rf$Yes
+```
+
+
+
+```{r}
+library(pROC)
+
+predictions <- as.data.frame(R_model_rf_pred)
+
+
+hist(predictions$Yes)
+
+(R_roc_rf<- roc(response = df_test$ARI,
+                            predictor= predictions$Yes) )
+
+plot(R_roc_rf, legacy.axes=TRUE)
+
+
+```
+
+
+##################################################################################################
+
+#Tree Baging 
+
+##################################################################################################
+```{r}
+tree_fomula<-ARI~Partner+birthwt+H4age+H4age+W4height+W4age+Wall_structures+Floor_struc+ Roof_struc+  Cooking_Place+ Toilet_shared+ Treat_water+ Radio+ TV+ age+ hheadsex+ hhkidlt5+  kidsex+ child_age_Month+ kidbord+ sleeprooms+ hhmemtotal+ hheadage++Occup_2+Occup_3+Occup_4+Occup_5+ Cook_fuel_2+ Cook_fuel_3+ educlvl_2+ educlvl_3+ educlvl_4+ Singletone+motorcycl +carhh+CattleNum+smallAnimaNum+Numberold+Elect+Mobile_fone+Overweightight+ overweight4age
+
+R_model.gag<- caret::train(tree_fomula,  nbagg = 1000,  data=df_train, method = 'treebag', trControl=fitControl,  importance=TRUE)
+
+library(randomForest)
+library(rpart)
+
+print(R_model.gag)
+
+plot(varImp(object=R_model.gag),main="treebag - Variable Importance")
+
+plot(varImp(object=R_model.gag),20, main="treebag - Variable Importance")
+
+```
+
+
+
+#Model Predictions 
+```{r}
+# predict the outcome on a test set
+R_model_gag_pred <- predict(R_model.gag, df_test, type = "prob")
+df_test2<-cbind(df_test_bag, R_model_gag_pred)
+df_test2$t<-df_test2$`1`
+```
+
+
+
+```{r}
+library(pROC)
+
+hist(R_model_gag_pred$Yes)
+
+(R_roc_gag<- roc(response = df_test$ARI,
+                            predictor= R_model_gag_pred$Yes) )
+
+plot(roc_gag, legacy.axes=TRUE)
+smooth(roc_gag)
+
+ci(roc_gag) # for confidence intervals 
+
+```
+
+###########################################################################################
+##GBM ##
+############################################################################################
+
+
+```{r}
+gbm<-df_models
+
+gbm<-na.omit(gbm)
+
+
+
+gbm$Diarh_prev<-as.factor(gbm$Diarh_prev)
+
+n <-  nrow(gbm)
+n_train_gbm <- round(0.7 * n) # 70% of the dataset
+
+set.seed(1)
+train_indices_gbm <- sample(1:n, n_train_gbm) # Create a vector of indices which is an 70% random sample
+df_train_gbm <- gbm[ train_indices_gbm, ]  
+df_test_gbm  <- gbm[-train_indices_gbm, ] 
+
+fitControl <- trainControl(method = "repeatedcv", number = 20, repeats = 4)
+
+grid <- expand.grid(n.trees=1000,shrinkage=0.01,n.minobsinnode =3,interaction.depth=5)
+
+R_model_gbm<-caret:: train(Diarh_prev~Partner+birthwt+H4age+H4age+W4height+W4age+Wall_structures+Floor_struc+ Roof_struc+  Cooking_Place+ Toilet_shared+ Treat_water+ Radio+ age+ hheadsex+ hhkidlt5+  kidsex+ child_age_Month+ kidbord+ sleeprooms+ hhmemtotal+ hheadage+Occup_1+Occup_2+Occup_3+Occup_4+Occup_5+Cook_fuel_1+ Cook_fuel_2+ Cook_fuel_3+educlvl_1+ educlvl_2+ educlvl_3+ educlvl_4+ Singletone+motorcycl +carhh+CattleNum+smallAnimaNum+Numberold+Elect+Mobile_fone+Overweightight+ overweight4age,    data=df_train_gbm,  method="gbm",  distribution = "bernoulli", trControl = fitControl, verbose = FALSE, tuneGrid=grid)
+
+
+library(gbm)
+
+varImp(R_model_gbm)
+
+
+gbm_imp1 <-varImp(R_model_gbm)[[1]] 
+
+
+
+Rural_gbm_dev <- predict(R_model_gbm, df_test_gbm,type= "prob")
+
+
+auc(df_test_gbm$Diarh_prev,Rural_gbm_dev$`1`)
+```
+
+
+```{r}
+library(pROC)
+
+hist(Rural_gbm_dev$Yes)
+
+(R_roc_gbm<- roc(response = df_test_gbm$Diarh_prev,
+                            predictor= Rural_gbm_dev$`1`))
+
+plot(Rural_gbm_dev, legacy.axes=TRUE)
+smooth(Rural_gbm_dev)
+```
+
+
+
+
+```{r}
+
+roclist <- list(
+   "Gradient boosted desicion tree"=R_roc_gbm, 
+      "Randon Foorest" = R_roc_rf,
+     "LASSO" = R_roc_lasso,
+     "Tree Baging"=R_roc_gag, 
+      "Logistic regression" = R_roc_glm
+               )
+
+Rural_pneum <- ggroc(roclist, aes =c("colour", "linetype"),  linetype =1, size = 2, legacy.axes = TRUE) + geom_abline() + theme_classic() +  labs(x = "1 - Specificity", y = "Sensitivity") + theme(legend.title=element_blank())  + theme(plot.title = element_text(lineheight=.8, face="bold", hjust = 0.5))
+
+
+
+```
+
+```{r}
+ROC_list<-list(R_roc_gbm, R_roc_rf, R_roc_lasso, R_roc_gag, R_roc_glm )
+```
+
+
+```{r}
+ROC_CI<-list(ci(R_roc_gbm),  ci(R_roc_rf), ci(R_roc_lasso), ci(R_roc_gag), ci(R_roc_glm))
+```
